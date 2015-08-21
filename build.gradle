@@ -1,3 +1,31 @@
+buildscript {
+    repositories { jcenter() }
+    dependencies {
+        classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.2'
+    }
+}
+
+apply plugin: 'idea'
+apply plugin: 'scala'
+apply from: 'gradle/scalatest.gradle'
+
+
+compileScala.scalaCompileOptions.additionalParameters = ['-feature']
+compileTestScala.scalaCompileOptions.additionalParameters = ['-feature']
+test.maxParallelForks = 1
+
+repositories {
+    jcenter()
+    maven { url 'https://repo.typesafe.com/typesafe/releases/' }
+    maven { url 'https://maven.twttr.com/' }
+}
+
+ext {
+    scalaVersion = '2.10.5'
+    scalaInterfaceVersion = '2.10'
+    zipkinVersion = '1.2.1-rc24'
+}
+
 apply plugin: 'com.github.johnrengelman.shadow'
 ext.mainClassName = 'com.twitter.zipkin.aggregate.RunHadoopJob'
 
@@ -20,7 +48,10 @@ task run(type:JavaExec) {
 jar.manifest.attributes 'Main-Class': mainClassName
 
 tasks.build.dependsOn(shadowJar)
-artifacts.zipkinUpload shadowJar
+
+artifacts {
+    shadowJar
+}
 
 repositories {
     // For dependencies of zipkin-cassandra
@@ -28,10 +59,12 @@ repositories {
 }
 
 dependencies {
-    compile project(':zipkin-scrooge')
-    compile "com.twitter:util-app_${scalaInterfaceVersion}:${commonVersions.twitterUtil}"
+    compile "org.scala-lang:scala-library:${scalaVersion}"
+
+    compile "io.zipkin:zipkin-scrooge:${zipkinVersion}"
+    // @fixme cassandra aggregate stuff needs to be rewritten to use CqlInputFormat
+    // compile "io.zipkin:zipkin-cassandra:${zipkinVersion}"
+    compile "com.twitter:util-app_${scalaInterfaceVersion}:6.26.0"
     compile "org.apache.hadoop:hadoop-client:2.4.0"
     compile "com.twitter:scalding-core_${scalaInterfaceVersion}:0.15.0"
-    // @fixme cassandra aggregate stuff needs to be rewritten to use CqlInputFormat
-    //compile project(':zipkin-cassandra')
 }

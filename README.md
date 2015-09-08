@@ -1,4 +1,4 @@
-# zipkin-aggregate
+# zipkin-dependencies-hadoop
  
 This module is a Hadoop job that will collect spans from your datastore (only Cassandra is supported yet),
 analyse them aggregate the data and store it for later presentation in the web UI.
@@ -16,9 +16,9 @@ analyse them aggregate the data and store it for later presentation in the web U
 ```
 ./gradlew build
 ```
-This will build a fat jar `build/libs/zipkin-aggregate-XXX-all.jar`.
+This will build a fat jar `build/libs/zipkin-dependencies-hadoop-XXX-all.jar`.
 Upload the jar to a job tracker and start it with arguments:
  
 ```
-hadoop jar zipkin-aggregate-XXX-all.jar --source cassandra --hosts cassandra1.example.com,cassandra2.example.com,cassandra3.example.com --port 9160
+hadoop jar zipkin-dependencies-hadoop-XXX-all.jar --source cassandra --hosts cassandra1.example.com,cassandra2.example.com,cassandra3.example.com --port 9160
 ```

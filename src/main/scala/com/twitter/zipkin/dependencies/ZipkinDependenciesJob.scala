@@ -1,13 +1,13 @@
-package com.twitter.zipkin.aggregate
+package com.twitter.zipkin.dependencies
 
 import java.util.Date
 
-import com.twitter.algebird.{Moments, Monoid, Semigroup}
+import com.twitter.algebird.{Moments, Monoid}
 import com.twitter.scalding._
 import com.twitter.util.Time
 import com.twitter.zipkin.common.{Dependencies, DependencyLink, Service, Span}
 
-final class ZipkinAggregateJob
+final class ZipkinDependenciesJob
    (args: Args) extends Job(args)
 {
   val dateRange: DateRange = DateRange(new Date(0L), new Date)
@@ -23,23 +23,20 @@ final class ZipkinAggregateJob
     .filter { case (key, span) => span.isValid }
 
   val parentSpans = allSpans
-    .group
 
   val childSpans = allSpans
     .filter { case (key, span) => span.parentId.isDefined }
-    .map { case (key, span) => ((span.parentId.get, span.traceId), span)}
-    .group
+    .mapValues { span => ((span.parentId.get, span.traceId), span)}
 
   val result = parentSpans.join(childSpans)
-    .map { case (_,(parent: Span,child: Span)) =>
+    .mapValues { case (_, (parent: Span, child: Span)) =>
     val moments = child.duration.map { d => Moments(d.toDouble) }.getOrElse(Monoid.zero[Moments])
     val dlink = DependencyLink(Service(parent.serviceName.get), Service(child.serviceName.get), moments)
     ((parent.serviceName.get, child.serviceName.get), dlink)
   }
-    .group
     .sum
     .values
-    .map { dlink => Dependencies(Time.fromMilliseconds(dateRange.start.timestamp), Time.fromMilliseconds(dateRange.end.timestamp), Seq(dlink))}
+    .map { dlink => Dependencies(Time.fromMilliseconds(dateRange.start.timestamp), Time.fromMilliseconds(dateRange.end.timestamp), Seq(dlink._2))}
     .sum
 
   result.write(spanSource)

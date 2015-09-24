@@ -2,10 +2,9 @@ package com.twitter.zipkin.dependencies
 
 import java.util.Date
 
-import com.twitter.algebird.{Moments, Monoid}
 import com.twitter.scalding._
 import com.twitter.util.Time
-import com.twitter.zipkin.common.{Dependencies, DependencyLink, Service, Span}
+import com.twitter.zipkin.common.{Dependencies, DependencyLink, Span}
 
 final class ZipkinDependenciesJob
    (args: Args) extends Job(args)
@@ -30,8 +29,9 @@ final class ZipkinDependenciesJob
 
   val result = parentSpans.join(childSpans)
     .mapValues { case (_, (parent: Span, child: Span)) =>
-    val moments = child.duration.map { d => Moments(d.toDouble) }.getOrElse(Monoid.zero[Moments])
-    val dlink = DependencyLink(Service(parent.serviceName.get), Service(child.serviceName.get), moments)
+    // We consider non-zero durations calls.
+    val callCount = child.duration.map(_ => 1).getOrElse(0)
+    val dlink = DependencyLink(parent.serviceName.get, child.serviceName.get, callCount)
     ((parent.serviceName.get, child.serviceName.get), dlink)
   }
     .sum

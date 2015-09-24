@@ -25,7 +25,7 @@ repositories {
 ext {
     scalaVersion = '2.11.7'
     scalaInterfaceVersion = '2.11'
-    zipkinVersion = '1.6.0'
+    zipkinVersion = '1.10.0'
 }
 
 apply plugin: 'com.github.johnrengelman.shadow'

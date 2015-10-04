@@ -2,13 +2,25 @@ package com.twitter.zipkin.dependencies
 
 import java.util.Date
 
+import com.twitter.algebird.{Semigroup, Monoid}
 import com.twitter.scalding._
-import com.twitter.util.Time
 import com.twitter.zipkin.common.{Dependencies, DependencyLink, Span}
 
 final class ZipkinDependenciesJob
    (args: Args) extends Job(args)
 {
+
+  implicit val sg: Semigroup[DependencyLink] = new Semigroup[DependencyLink] {
+    override def plus(l: DependencyLink, r: DependencyLink) =
+      DependencyLink(l.parent, l.child, l.callCount + r.callCount)
+  }
+
+  implicit val monoid: Monoid[Dependencies] = new Monoid[Dependencies] {
+    override def zero = Dependencies.zero
+
+    override def plus(l: Dependencies, r: Dependencies) = l + r
+  }
+
   val dateRange: DateRange = DateRange(new Date(0L), new Date)
 
   @transient
@@ -36,7 +48,7 @@ final class ZipkinDependenciesJob
   }
     .sum
     .values
-    .map { dlink => Dependencies(Time.fromMilliseconds(dateRange.start.timestamp), Time.fromMilliseconds(dateRange.end.timestamp), Seq(dlink._2))}
+    .map { dlink => Dependencies(dateRange.start.timestamp * 1000, dateRange.end.timestamp * 1000, Seq(dlink._2)) }
     .sum
 
   result.write(spanSource)

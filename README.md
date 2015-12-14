@@ -1,24 +1,2 @@
 # zipkin-dependencies-hadoop
- 
-This module is a Hadoop job that will collect spans from your datastore (only Cassandra is supported yet),
-analyse them aggregate the data and store it for later presentation in the web UI.
- 
-## Running locally:
- 
-```bash
-# to connect to a cassandra on localhost:9160
-./gradlew run
-# to specify a different cassandra cluster
-./gradlew run -Phosts=cassandra1.example.com,cassandra2.example.com,cassandra3.example.com -Pport=9160
-```
- 
-## Building a fat jar and submitting the a Hadoop job scheduler
-```
-./gradlew build
-```
-This will build a fat jar `build/libs/zipkin-dependencies-hadoop-XXX-all.jar`.
-Upload the jar to a job tracker and start it with arguments:
- 
-```
-hadoop jar zipkin-dependencies-hadoop-XXX-all.jar --source cassandra --hosts cassandra1.example.com,cassandra2.example.com,cassandra3.example.com --port 9160
-```
+This project is discontinued and will be deleted. Please use its replacement [zipkin-dependencies-spark](https://github.com/openzipkin/zipkin-dependencies-spark)
